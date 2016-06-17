@@ -105,6 +105,8 @@ public class Server {
 					String formattedWay = routeFormatter.getFormattedWay(townIds);
 					pw.println(formattedWay);
 					//TODO: format way and print it out
+					
+					
 				}
 			}
 		  }
