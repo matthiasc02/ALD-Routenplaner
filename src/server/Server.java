@@ -31,85 +31,34 @@ public class Server {
 	private RouteConverter routeConverter = new RouteConverter();
 	private TownResolver townResolver = new TownResolver();
 	private RouteFormatter routeFormatter = new RouteFormatter();
-	
+	private PrintWriter pw;
+	private BufferedReader br;
+	private Socket socket;
+	private OutputStream os;
+
 	private List<Town> townList;
 	private List<Route> routeList;
-	
+
 	public Server(List<Town> townList, List<Route> routeList) {
 		this.townList = townList;
 		this.routeList = routeList;
 	}
-	
 
 	public void run() {
 		try {
 			serverSocket = new ServerSocket(PORT);
 			while (true) {
-				Socket socket = serverSocket.accept();
-
-				OutputStream os = socket.getOutputStream();
-				PrintWriter pw = new PrintWriter(os, true);
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				socket = serverSocket.accept();
+				os = socket.getOutputStream();
+				pw = new PrintWriter(os, true);
+				br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				pw.println("##########################");
 				pw.println("Welcome to Routeplaner 1.0");
 				pw.println("##########################");
-				printCommandOptionText(pw);
 
-				String optionCommand = br.readLine();
-				while (!optionCommandValidator.isValidOptionCommand(optionCommand)) {
-					pw.println("Command '" + optionCommand + "' not found.");
-					printCommandOptionText(pw);
-					optionCommand = br.readLine();
-				}
-
-				if (optionCommandValidator.isShutDownOptionCommand(optionCommand)) {
-					pw.println("Routeplaner is going to shutdown...");
-					pw.close();
-					socket.close();
-					shutDown();
-					return;
-				} else {
-					printSearchStrategyCommandText(pw);
-
-					String searchStrategyCommand = br.readLine();
-					while (!searchStrategyCommandValidator.isValidSearchStrategyCommand(searchStrategyCommand)) {
-						pw.println("Command '" + searchStrategyCommand + "' not found.");
-						printSearchStrategyCommandText(pw);
-						searchStrategyCommand = br.readLine();
-					}
-					
-					
-					Town startTown = null;
-					pw.println("Please enter the name of your start town:");
-					while (startTown == null) {
-						String startTownInput = br.readLine();
-						startTown = townResolver.getTownByName(townList, startTownInput);
-						if (startTown == null) {
-							pw.println("Your starting point couldn't be recognized. Please try again!");
-						}
-					}
-					
-					Town destinationTown = null;
-					pw.println("Please enter the name of your destination town:");
-					while (destinationTown == null) {
-						String destinationTownInput = br.readLine();
-						destinationTown = townResolver.getTownByName(townList, destinationTownInput);
-						if (destinationTown == null) {
-							pw.println("Your destination couldn't be recognized. Please try again!");
-					}
-					
-					Graph graph = routeConverter.convertRoutesToGraph(routeList);
-					SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
-					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-					String formattedWay = routeFormatter.getFormattedWay(townIds);
-					pw.println(formattedWay);
-					//TODO: format way and print it out
-					
-					
-				}
+				runStartup();
 			}
-		  }
 		} catch (IOException e) {
 			System.out.println("Could not startup Server.");
 			e.printStackTrace();
@@ -123,7 +72,7 @@ public class Server {
 		}
 
 	}
-	
+
 	private void printCommandOptionText(PrintWriter pw) {
 		pw.println("Please enter one of the following commands:");
 		pw.println(String.format("[%s] search for route", OptionCommandValidator.OPTION_COMMAND_SEARCH));
@@ -136,6 +85,7 @@ public class Server {
 		pw.println(String.format("[%s] breadthfirst",
 				SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_BREADTHFIRST));
 		pw.println(String.format("[%s] depthfirst", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DEPTHFIRST));
+		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
 	}
 
 	public boolean isRunning() {
@@ -147,4 +97,100 @@ public class Server {
 			serverSocket.close();
 		}
 	}
+
+	private void shutDownServerOnInput(PrintWriter pw, Socket socket) throws IOException {
+		pw.println("Routeplaner is going to shutdown...");
+		pw.close();
+		socket.close();
+		shutDown();
+	}
+
+	private void runStartup() {
+		try {
+			printCommandOptionText(pw);
+
+			String optionCommand = br.readLine();
+			while (!optionCommandValidator.isValidOptionCommand(optionCommand)) {
+				pw.println("Command '" + optionCommand + "' not found.");
+				printCommandOptionText(pw);
+				optionCommand = br.readLine();
+			}
+
+			// prüfe auf Eingabe von C (Close)
+
+			if (optionCommandValidator.isShutDownOptionCommand(optionCommand)) {
+				shutDownServerOnInput(pw, socket);
+				return;
+			} else {
+				printSearchStrategyCommandText(pw);
+
+				String searchStrategyCommand = br.readLine();
+
+				while (!searchStrategyCommandValidator.isValidSearchStrategyCommand(searchStrategyCommand)) {
+					// prüfe auf Eingabe von C (Close)
+					if (optionCommandValidator.isShutDownOptionCommand(searchStrategyCommand)) {
+						shutDownServerOnInput(pw, socket);
+						return; // return zum rausgehen aus der Methode
+					} else {
+						pw.println("Command '" + searchStrategyCommand + "' not found.");
+						printSearchStrategyCommandText(pw);
+
+						searchStrategyCommand = br.readLine();
+
+					}
+
+				}
+
+				Town startTown = null;
+				pw.println("Please enter the name of your start town:");
+				while (startTown == null) {
+					String startTownInput = br.readLine();
+					startTown = townResolver.getTownByName(townList, startTownInput);
+					if (startTown == null) {
+						pw.println("Your starting point couldn't be recognized. Please try again!");
+					}
+				}
+
+				Town destinationTown = null;
+				pw.println("Please enter the name of your destination town:");
+				while (destinationTown == null) {
+					String destinationTownInput = br.readLine();
+					destinationTown = townResolver.getTownByName(townList, destinationTownInput);
+					if (destinationTown == null) {
+						pw.println("Your destination couldn't be recognized. Please try again!");
+					}
+
+					Graph graph = routeConverter.convertRoutesToGraph(routeList);
+					SearchStrategy searchStrategy = searchStrategyResolver
+							.getSelectedSearchStrategy(searchStrategyCommand);
+					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
+					if (townIds != null) {
+						String formattedWay = routeFormatter.getFormattedWay(townIds);
+						pw.println(formattedWay);
+					} else {
+						pw.println("townID was NULL");
+					}
+					pw.println("");
+					pw.println("");
+					pw.println("##########################");
+					pw.println("New route search");
+					pw.println("##########################");
+					runStartup();
+					// TODO: format way and print it out
+
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Could not startup Server.");
+			e.printStackTrace();
+		} finally {
+			try {
+				shutDown();
+			} catch (IOException e) {
+				System.out.println("Could not shutdown Server. Maybe server is already down.");
+				e.printStackTrace();
+			}
+		}
+	}
+
 }
