@@ -56,18 +56,6 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		// pred ausgeben
-		for (int i = 0; i < pred.length; i++) {
-			System.out.println(i + " über " + pred[i]);
-		}
-
-		// Way ausgeben
-	/*	System.out.println();
-		ArrayList<Integer> way = predToWay(pred, von, nach);
-		for (int vertexNumber : way) {
-			System.out.print(vertexNumber + " ");
-		}
-		System.out.println(); */
 		return SearchUtils.predToWay(pred, von, nach);
 	}
 
@@ -105,19 +93,6 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 				}
 			}
 		}
-
-		// Pred ausgeben
-		for (int i = 0; i < pred.length; i++) {
-			System.out.println(i + " über " + pred[i]);
-		}
-
-		// Way ausgeben
-		System.out.println();
-		ArrayList<Integer> way = SearchUtils.predToWay(pred, von, nach);
-		for (int vertexNumber : way) {
-			System.out.print(vertexNumber + " ");
-		}
-		System.out.println();
 	}
 
 	private static int nextVertex(int[] dist, boolean[] visited) {

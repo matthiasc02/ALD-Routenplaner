@@ -46,14 +46,6 @@ public class DepthFirstSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		if (found) {
-			// Route ausgeben
-			for (int i = 0; i < pred.length; i++) {
-				System.out.println(i + " über " + pred[i]);
-			}
-		} else {
-			System.out.println("Keine Verbindung gefunden");
-		}
 		return SearchUtils.predToWay(pred, von, nach);
 	}
 
