@@ -15,62 +15,60 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 	}
 
 	// Variante mit Heap für lichte Graphen
-	private static List<Integer> dijkstra(Graph g, int von, int nach) {
+	protected List<Integer> dijkstra(Graph graph, int startId, int destinationId) {
+		int[] pred = new int[graph.numVertices()];
+		int[] dist = new int[graph.numVertices()];
+		boolean[] visited = new boolean[graph.numVertices()];
 
-		int[] pred = new int[g.numVertices()];
-		int[] dist = new int[g.numVertices()];
-		boolean[] visited = new boolean[g.numVertices()];
-
-		VertexHeap heap = new VertexHeap(g.numVertices());
+		VertexHeap heap = new VertexHeap(graph.numVertices());
 		for (int i = 0; i < dist.length; i++) {
 			dist[i] = 99999;
 			heap.insert(new WeightedEdge(i, 99999));
 			pred[i] = -1;
 		}
 
-		dist[von] = 0;
+		dist[startId] = 0;
 		heap.setPriority(0, 0);
 
 		while (!heap.isEmpty()) {
 
 			WeightedEdge cur = heap.remove();
 
-			if (cur.vertex == nach)
+			if (cur.vertex == destinationId)
 				break;
 
-			List<WeightedEdge> nachbarn = g.getEdges(cur.vertex);
+			List<WeightedEdge> neighbours = graph.getEdges(cur.vertex);
 
-			for (WeightedEdge nachbar : nachbarn) {
-				int distBisHier = cur.weight;
-				int distZumNachbar = nachbar.weight;
+			for (WeightedEdge neighbour : neighbours) {
+				int distanceTilHere = cur.weight;
+				int distanceToNeighbour = neighbour.weight;
 
-				int distInsg = distBisHier + distZumNachbar;
+				int distanceTotal = distanceTilHere + distanceToNeighbour;
 
-				if (distInsg < dist[nachbar.vertex]) {
+				if (distanceTotal < dist[neighbour.vertex]) {
 
-					dist[nachbar.vertex] = distInsg;
-					heap.setPriority(nachbar.vertex, distInsg);
+					dist[neighbour.vertex] = distanceTotal;
+					heap.setPriority(neighbour.vertex, distanceTotal);
 
-					pred[nachbar.vertex] = cur.vertex;
+					pred[neighbour.vertex] = cur.vertex;
 				}
 			}
 		}
 
-		return SearchUtils.predToWay(pred, von, nach);
+		return SearchUtils.predToWay(pred, startId, destinationId);
 	}
 
 	// Variante ohne Heap für dichte Graphen
-	private static void dijkstra2(Graph g, int von, int nach) {
-
-		int[] pred = new int[g.numVertices()];
-		int[] dist = new int[g.numVertices()];
-		boolean[] visited = new boolean[g.numVertices()];
+	private void dijkstra2(Graph graph, int startId, int destinationId) {
+		int[] pred = new int[graph.numVertices()];
+		int[] dist = new int[graph.numVertices()];
+		boolean[] visited = new boolean[graph.numVertices()];
 
 		for (int i = 0; i < dist.length; i++) {
 			dist[i] = 99999;
 			pred[i] = -1;
 		}
-		dist[von] = 0;
+		dist[startId] = 0;
 
 		while (true) {
 			int curIndex = nextVertex(dist, visited);
@@ -79,16 +77,16 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 
 			visited[curIndex] = true;
 
-			List<WeightedEdge> nachbarn = g.getEdges(curIndex);
-			for (WeightedEdge nachbar : nachbarn) {
-				int distBisHier = dist[curIndex];
-				int distZumNachbar = nachbar.weight;
+			List<WeightedEdge> neighbours = graph.getEdges(curIndex);
+			for (WeightedEdge neighbour : neighbours) {
+				int distanceTilHere = dist[curIndex];
+				int distanceToNeighbour = neighbour.weight;
 
-				int distInsg = distBisHier + distZumNachbar;
+				int distanceTotal = distanceTilHere + distanceToNeighbour;
 
-				if (dist[nachbar.vertex] > distInsg) {
-					dist[nachbar.vertex] = distInsg;
-					pred[nachbar.vertex] = curIndex;
+				if (dist[neighbour.vertex] > distanceTotal) {
+					dist[neighbour.vertex] = distanceTotal;
+					pred[neighbour.vertex] = curIndex;
 
 				}
 			}
@@ -96,7 +94,6 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 	}
 
 	private static int nextVertex(int[] dist, boolean[] visited) {
-
 		int minValue = 99999;
 		int minIndex = -1;
 
