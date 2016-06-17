@@ -10,35 +10,34 @@ public class BreadthFirstSearchStrategy implements SearchStrategy {
 
 	@Override
 	public List<Integer> search(Graph graph, int startId, int destinationId) {
-		return findByBreitenSuche(graph, startId, destinationId);
+		return findByBreadthFirst(graph, startId, destinationId);
 	}
 
-	private static List<Integer> findByBreitenSuche(Graph g, int von, int nach) {
-
+	protected List<Integer> findByBreadthFirst(Graph graph, int startId, int destinationId) {
 		ArrayDeque<Integer> nodes = new ArrayDeque<Integer>();
 
-		boolean[] visited = new boolean[g.numVertices()];
-		int[] pred = new int[g.numVertices()];
+		boolean[] visited = new boolean[graph.numVertices()];
+		int[] pred = new int[graph.numVertices()];
 		boolean found = false;
 
 		for (int i = 0; i < pred.length; i++) {
 			pred[i] = -1;
 		}
 
-		nodes.add(von);
+		nodes.add(startId);
 
 		outer: while (!nodes.isEmpty()) {
 
 			int current = nodes.poll();
 			visited[current] = true;
 
-			List<WeightedEdge> nachbarn = g.getEdges(current);
-			for (WeightedEdge nachbar : nachbarn) {
-				if (!visited[nachbar.vertex]) {
-					nodes.add(nachbar.vertex);
-					pred[nachbar.vertex] = current;
+			List<WeightedEdge> neighbours = graph.getEdges(current);
+			for (WeightedEdge neighbour : neighbours) {
+				if (!visited[neighbour.vertex]) {
+					nodes.add(neighbour.vertex);
+					pred[neighbour.vertex] = current;
 
-					if (nachbar.vertex == nach) {
+					if (neighbour.vertex == destinationId) {
 						found = true;
 						break outer;
 					}
@@ -46,7 +45,7 @@ public class BreadthFirstSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		return SearchUtils.predToWay(pred, von, nach);
+		return SearchUtils.predToWay(pred, startId, destinationId);
 	}
 
 }
