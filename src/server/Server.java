@@ -81,17 +81,22 @@ public class Server {
 					
 					
 					Town startTown = null;
+					pw.println("Please enter the name of your start town:");
 					while (startTown == null) {
-						pw.println("Please enter the name of your start town:");
 						String startTownInput = br.readLine();
 						startTown = townResolver.getTownByName(townList, startTownInput);
+						if (startTown == null) {
+							pw.println("Your starting point couldn't be recognized. Please try again!");
+						}
 					}
 					
 					Town destinationTown = null;
+					pw.println("Please enter the name of your destination town:");
 					while (destinationTown == null) {
-						pw.println("Please enter the name of your destination town:");
 						String destinationTownInput = br.readLine();
 						destinationTown = townResolver.getTownByName(townList, destinationTownInput);
+						if (destinationTown == null) {
+							pw.println("Your destination couldn't be recognized. Please try again!");
 					}
 					
 					Graph graph = routeConverter.convertRoutesToGraph(routeList);
@@ -102,6 +107,7 @@ public class Server {
 					//TODO: format way and print it out
 				}
 			}
+		  }
 		} catch (IOException e) {
 			System.out.println("Could not startup Server.");
 			e.printStackTrace();
