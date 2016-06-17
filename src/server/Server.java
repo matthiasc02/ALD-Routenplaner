@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import Graph.Graph;
@@ -44,20 +46,34 @@ public class Server {
 		this.routeList = routeList;
 	}
 
+	public static int getPort() {
+		return PORT;
+	}
+
 	public void run() {
+
 		try {
 			serverSocket = new ServerSocket(PORT);
+			// as we are lazy we can start the cmd shell by the program itself
+			/*
+			 * ProcessBuilder builder = new ProcessBuilder("CMD", "/C",
+			 * "start"); try { builder.start(); } catch (IOException e) {
+			 * e.printStackTrace(); }
+			 */
 			while (true) {
-				socket = serverSocket.accept();
-				os = socket.getOutputStream();
-				pw = new PrintWriter(os, true);
-				br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				if (!serverSocket.isClosed()) {
+					socket = serverSocket.accept();
+					os = socket.getOutputStream();
+					pw = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.ISO_8859_1), true);
+					br = new BufferedReader(
+							new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
 
-				pw.println("##########################");
-				pw.println("Welcome to Routeplaner 1.0");
-				pw.println("##########################");
+					pw.println("##########################");
+					pw.println("Welcome to Routeplaner 1.0");
+					pw.println("##########################");
 
-				runStartup();
+					runStartup();
+				}
 			}
 		} catch (IOException e) {
 			System.out.println("Could not startup Server.");
@@ -135,48 +151,64 @@ public class Server {
 						pw.println("Command '" + searchStrategyCommand + "' not found.");
 						printSearchStrategyCommandText(pw);
 						searchStrategyCommand = br.readLine();
-
 					}
-
 				}
-
+				pw.println("You can select from the following cities:");
+				for (Town town : townList) {
+					pw.printf(town.getName());
+					if (townList.indexOf(town) != (townList.size() - 1))
+						pw.printf(", ");
+				}
+				pw.println();
+				pw.println();
 				Town startTown = null;
-				pw.println("Please enter the name of your start town:");
+				pw.printf("Please enter the name of your start town: ");
 				while (startTown == null) {
 					String startTownInput = br.readLine();
 					startTown = townResolver.getTownByName(townList, startTownInput);
+					if (optionCommandValidator.isShutDownOptionCommand(startTownInput)) {
+						shutDownServerOnInput(pw, socket);
+						return;
+					}
 					if (startTown == null) {
-						pw.println("Your starting point couldn't be recognized. Please try again!");
+						pw.printf("Your starting point couldn't be recognized. Please enter an other town! ");
 					}
 				}
 
 				Town destinationTown = null;
-				pw.println("Please enter the name of your destination town:");
+				pw.printf("Please enter the name of your destination town: ");
 				while (destinationTown == null) {
 					String destinationTownInput = br.readLine();
 					destinationTown = townResolver.getTownByName(townList, destinationTownInput);
+					if (optionCommandValidator.isShutDownOptionCommand(destinationTownInput)) {
+						shutDownServerOnInput(pw, socket);
+						return;
+					}
 					if (destinationTown == null) {
-						pw.println("Your destination couldn't be recognized. Please try again!");
+						pw.printf("Your destination couldn't be recognized. Please enter an other town! ");
 					}
 
 					Graph graph = routeConverter.convertRoutesToGraph(routeList);
 					SearchStrategy searchStrategy = searchStrategyResolver
 							.getSelectedSearchStrategy(searchStrategyCommand);
-					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-					if (townIds != null) {
-						String formattedWay = routeFormatter.getFormattedWay(townIds);
-						pw.println(formattedWay);
-					} else {
-						pw.println("townID was NULL");
-					}
-					pw.println("");
-					pw.println("");
-					pw.println("##########################");
-					pw.println("New route search");
-					pw.println("##########################");
-					runStartup();
-					// TODO: format way and print it out
+					if (startTown != null && destinationTown != null) {
+						List<Integer> townIds = searchStrategy.search(graph, startTown.getId(),
+								destinationTown.getId());
+						if (townIds != null) {
+							String formattedWay = routeFormatter.getFormattedWay(townIds);
+							pw.println(formattedWay);
+						} else {
+							pw.println("townID was NULL");
+						}
+						pw.println("");
+						pw.println("");
+						pw.println("##########################");
+						pw.println("New route search");
+						pw.println("##########################");
+						runStartup();
+						// TODO: format way and print it out
 
+					}
 				}
 			}
 		} catch (IOException e) {
