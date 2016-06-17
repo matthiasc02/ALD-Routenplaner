@@ -31,6 +31,10 @@ public class Server {
 	private RouteConverter routeConverter = new RouteConverter();
 	private TownResolver townResolver = new TownResolver();
 	private RouteFormatter routeFormatter = new RouteFormatter();
+	private PrintWriter pw;
+	private BufferedReader br;
+	private Socket socket;
+	private OutputStream os;
 
 	private List<Town> townList;
 	private List<Route> routeList;
@@ -44,71 +48,16 @@ public class Server {
 		try {
 			serverSocket = new ServerSocket(PORT);
 			while (true) {
-				Socket socket = serverSocket.accept();
-
-				OutputStream os = socket.getOutputStream();
-				PrintWriter pw = new PrintWriter(os, true);
-				BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				socket = serverSocket.accept();
+				os = socket.getOutputStream();
+				pw = new PrintWriter(os, true);
+				br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				pw.println("##########################");
 				pw.println("Welcome to Routeplaner 1.0");
 				pw.println("##########################");
-				printCommandOptionText(pw);
 
-				String optionCommand = br.readLine();
-				while (!optionCommandValidator.isValidOptionCommand(optionCommand)) {
-					pw.println("Command '" + optionCommand + "' not found.");
-					printCommandOptionText(pw);
-					optionCommand = br.readLine();
-				}
-
-				// prüfe auf Eingabe von C (Close)
-
-				if (optionCommandValidator.isShutDownOptionCommand(optionCommand)) {
-					shutDownServerOnInput(pw, socket);
-					return;
-				} else {
-					printSearchStrategyCommandText(pw);
-
-					String searchStrategyCommand = br.readLine();
-
-					while (!searchStrategyCommandValidator.isValidSearchStrategyCommand(searchStrategyCommand)) {
-						// prüfe auf Eingabe von C (Close)
-						if (optionCommandValidator.isShutDownOptionCommand(searchStrategyCommand)) {
-							shutDownServerOnInput(pw, socket);
-							return; // return zum rausgehen aus der Methode
-						} else {
-							pw.println("Command '" + searchStrategyCommand + "' not found.");
-							printSearchStrategyCommandText(pw);
-
-							searchStrategyCommand = br.readLine();
-
-						}
-
-					}
-
-					Town startTown = null;
-					while (startTown == null) {
-						pw.println("Please enter the name of your start town:");
-						String startTownInput = br.readLine();
-						startTown = townResolver.getTownByName(townList, startTownInput);
-					}
-
-					Town destinationTown = null;
-					while (destinationTown == null) {
-						pw.println("Please enter the name of your destination town:");
-						String destinationTownInput = br.readLine();
-						destinationTown = townResolver.getTownByName(townList, destinationTownInput);
-					}
-
-					Graph graph = routeConverter.convertRoutesToGraph(routeList);
-					SearchStrategy searchStrategy = searchStrategyResolver
-							.getSelectedSearchStrategy(searchStrategyCommand);
-					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-					String formattedWay = routeFormatter.getFormattedWay(townIds);
-					pw.println(formattedWay);
-					// TODO: format way and print it out
-				}
+				runStartup();
 			}
 		} catch (IOException e) {
 			System.out.println("Could not startup Server.");
@@ -155,4 +104,92 @@ public class Server {
 		socket.close();
 		shutDown();
 	}
+
+	private void runStartup() {
+		try {
+			printCommandOptionText(pw);
+
+			String optionCommand = br.readLine();
+			while (!optionCommandValidator.isValidOptionCommand(optionCommand)) {
+				pw.println("Command '" + optionCommand + "' not found.");
+				printCommandOptionText(pw);
+				optionCommand = br.readLine();
+			}
+
+			// prüfe auf Eingabe von C (Close)
+
+			if (optionCommandValidator.isShutDownOptionCommand(optionCommand)) {
+				shutDownServerOnInput(pw, socket);
+				return;
+			} else {
+				printSearchStrategyCommandText(pw);
+
+				String searchStrategyCommand = br.readLine();
+
+				while (!searchStrategyCommandValidator.isValidSearchStrategyCommand(searchStrategyCommand)) {
+					// prüfe auf Eingabe von C (Close)
+					if (optionCommandValidator.isShutDownOptionCommand(searchStrategyCommand)) {
+						shutDownServerOnInput(pw, socket);
+						return; // return zum rausgehen aus der Methode
+					} else {
+						pw.println("Command '" + searchStrategyCommand + "' not found.");
+						printSearchStrategyCommandText(pw);
+						searchStrategyCommand = br.readLine();
+
+					}
+
+				}
+
+				Town startTown = null;
+				pw.println("Please enter the name of your start town:");
+				while (startTown == null) {
+					String startTownInput = br.readLine();
+					startTown = townResolver.getTownByName(townList, startTownInput);
+					if (startTown == null) {
+						pw.println("Your starting point couldn't be recognized. Please try again!");
+					}
+				}
+
+				Town destinationTown = null;
+				pw.println("Please enter the name of your destination town:");
+				while (destinationTown == null) {
+					String destinationTownInput = br.readLine();
+					destinationTown = townResolver.getTownByName(townList, destinationTownInput);
+					if (destinationTown == null) {
+						pw.println("Your destination couldn't be recognized. Please try again!");
+					}
+
+					Graph graph = routeConverter.convertRoutesToGraph(routeList);
+					SearchStrategy searchStrategy = searchStrategyResolver
+							.getSelectedSearchStrategy(searchStrategyCommand);
+					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
+					if (townIds != null) {
+						String formattedWay = routeFormatter.getFormattedWay(townIds);
+						pw.println(formattedWay);
+					} else {
+						pw.println("townID was NULL");
+					}
+					pw.println("");
+					pw.println("");
+					pw.println("##########################");
+					pw.println("New route search");
+					pw.println("##########################");
+					runStartup();
+					// TODO: format way and print it out
+
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Could not startup Server.");
+			e.printStackTrace();
+		} finally {
+			try {
+				shutDown();
+			} catch (IOException e) {
+				System.out.println("Could not shutdown Server. Maybe server is already down.");
+				e.printStackTrace();
+			}
+		}
+	}
+
 }
