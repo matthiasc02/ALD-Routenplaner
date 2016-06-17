@@ -1,7 +1,11 @@
 package search;
 
+import java.util.List;
+
+import Graph.Graph;
+
 public interface SearchStrategy {
 	
-	void search();
+	List<Integer> search(Graph graph, int startId, int destinationId);
 	
 }
