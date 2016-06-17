@@ -134,7 +134,6 @@ public class Server {
 					} else {
 						pw.println("Command '" + searchStrategyCommand + "' not found.");
 						printSearchStrategyCommandText(pw);
-
 						searchStrategyCommand = br.readLine();
 
 					}
