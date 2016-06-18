@@ -157,9 +157,9 @@ public class Server {
 						searchStrategyCommand = br.readLine();
 					}
 				}
-				
+
 				printTownList();
-		
+
 				Town startTown = null;
 				String startTownInputText = "Please enter the name of your start town: ";
 				startTown = handleTownInput(startTownInputText, br);
@@ -175,17 +175,17 @@ public class Server {
 					shutDownServerOnInput(pw, socket);
 					return;
 				}
-			
-				
+
 				Graph graph = routeConverter.convertRoutesToGraph(routeList);
 				SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
 				if (startTown != null && destinationTown != null) {
-					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(),
-							destinationTown.getId());
+					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
 					if (townIds != null) {
-						String formattedWay = routeFormatter.getFormattedWay(townIds);
+						String formattedWayByIds = routeFormatter.getFormattedWayByIds(townIds);
+						String formattedWayByNames = routeFormatter.getFormattedWayByNames(townIds, townList);
 						pw.println();
-						pw.println(formattedWay);
+						pw.println(formattedWayByIds);
+						pw.println(formattedWayByNames);
 					} else {
 						pw.println("townID was NULL");
 					}
@@ -210,7 +210,7 @@ public class Server {
 			}
 		}
 	}
-	
+
 	private Town handleTownInput(String inputText, BufferedReader br) throws IOException {
 		Town town = null;
 		pw.printf(inputText);
@@ -226,7 +226,7 @@ public class Server {
 		}
 		return town;
 	}
-	
+
 	private void printTownList() {
 		pw.println();
 		pw.println("You can select from the following cities:");

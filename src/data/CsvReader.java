@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class CsvReader<T> {
 
 	public static final String CSV_DELIMITER = ";";
 
-	public List<T> parseFile() {
+	public Collection<T> parseFile() {
 		List<T> objects = new ArrayList<T>();
 		BufferedReader br = null;
 		try {
