@@ -54,9 +54,9 @@ public class Server {
 
 		try {
 			serverSocket = new ServerSocket(PORT);
+			
 			// as we are lazy we can start the cmd shell by the program itself
-
-			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start");
+			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "9995");
 			try {
 				builder.start();
 			} catch (IOException e) {
@@ -87,29 +87,6 @@ public class Server {
 			}
 		}
 
-	}
-	
-	private void printStartText(PrintWriter pw) {
-		pw.println("##########################");
-		pw.println("Welcome to Routeplaner 1.0");
-		pw.println("##########################");
-	}
-
-	private void printCommandOptionText(PrintWriter pw) {
-		pw.println();
-		pw.println(String.format("[%s] search for route", OptionCommandValidator.OPTION_COMMAND_SEARCH));
-		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
-		pw.printf("Please enter one of the above commands: ");
-	}
-
-	private void printSearchStrategyCommandText(PrintWriter pw) {
-		pw.println();
-		pw.println(String.format("[%s] dijkstra", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DIJKSTRA));
-		pw.println(String.format("[%s] breadthfirst",
-				SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_BREADTHFIRST));
-		pw.println(String.format("[%s] depthfirst", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DEPTHFIRST));
-		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
-		pw.printf("Please enter one of the above search strategies: ");
 	}
 
 	public boolean isRunning() {
@@ -185,21 +162,12 @@ public class Server {
 				if (startTown != null && destinationTown != null) {
 					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
 					if (townIds != null) {
-						String formattedWayByIds = routeFormatter.getFormattedWayByIds(townIds);
-						String formattedWayByNames = routeFormatter.getFormattedWayByNames(townIds, townList);
-						pw.println();
-						pw.println(formattedWayByIds);
-						pw.println(formattedWayByNames);
+						printWay(townIds);
 					} else {
-						pw.println("townID was NULL");
+						pw.println("No route found.");
 					}
-					pw.println();
-					pw.println();
-					pw.println("##########################");
-					pw.println("New route search");
-					pw.println("##########################");
-					runStartup();
 
+					startNewRouteSearch();
 				}
 			}
 		} catch (IOException e) {
@@ -230,6 +198,29 @@ public class Server {
 		}
 		return town;
 	}
+	
+	private void printStartText(PrintWriter pw) {
+		pw.println("##########################");
+		pw.println("Welcome to Routeplaner 1.0");
+		pw.println("##########################");
+	}
+
+	private void printCommandOptionText(PrintWriter pw) {
+		pw.println();
+		pw.println(String.format("[%s] search for route", OptionCommandValidator.OPTION_COMMAND_SEARCH));
+		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
+		pw.printf("Please enter one of the above commands: ");
+	}
+
+	private void printSearchStrategyCommandText(PrintWriter pw) {
+		pw.println();
+		pw.println(String.format("[%s] dijkstra", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DIJKSTRA));
+		pw.println(String.format("[%s] breadthfirst",
+				SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_BREADTHFIRST));
+		pw.println(String.format("[%s] depthfirst", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DEPTHFIRST));
+		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
+		pw.printf("Please enter one of the above search strategies: ");
+	}
 
 	private void printTownList() {
 		pw.println();
@@ -243,4 +234,20 @@ public class Server {
 		pw.println();
 	}
 
+	private void printWay(List<Integer> townIds) {
+		String formattedWayByIds = routeFormatter.getFormattedWayByIds(townIds);
+		String formattedWayByNames = routeFormatter.getFormattedWayByNames(townIds, townList);
+		pw.println();
+		pw.println(formattedWayByIds);
+		pw.println(formattedWayByNames);
+	}
+
+	private void startNewRouteSearch() {
+		pw.println();
+		pw.println();
+		pw.println("##########################");
+		pw.println("New route search");
+		pw.println("##########################");
+		runStartup();
+	}
 }
