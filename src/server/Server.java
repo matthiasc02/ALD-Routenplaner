@@ -157,18 +157,9 @@ public class Server {
 					return;
 				}
 
-				Graph graph = routeConverter.convertRoutesToGraph(routeList);
-				SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
-				if (startTown != null && destinationTown != null) {
-					List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-					if (townIds != null) {
-						printWay(townIds);
-					} else {
-						pw.println("No route found.");
-					}
-
-					startNewRouteSearch();
-				}
+				doRouteSearch(startTown, destinationTown, searchStrategyCommand);
+				
+				startNewRouteSearch();
 			}
 		} catch (IOException e) {
 			System.out.println("Could not startup Server.");
@@ -197,6 +188,21 @@ public class Server {
 			}
 		}
 		return town;
+	}
+	
+	private void doRouteSearch(Town startTown, Town destinationTown, String searchStrategyCommand) {
+		if (startTown != null && destinationTown != null) {
+			Graph graph = routeConverter.convertRoutesToGraph(routeList);
+			SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
+			List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
+			if (townIds != null) {
+				printWay(townIds);
+			} else {
+				pw.println("No route found.");
+			}
+		} else {
+			pw.println("Start or destination town not set.");
+		}
 	}
 	
 	private void printStartText(PrintWriter pw) {
