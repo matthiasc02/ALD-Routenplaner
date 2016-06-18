@@ -1,6 +1,7 @@
 package data;
 
 import Graph.BaseTree;
+import Graph.Node;
 
 public class TownSearchTree extends BaseTree<Town> {
 
