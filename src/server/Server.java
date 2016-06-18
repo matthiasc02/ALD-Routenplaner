@@ -71,9 +71,7 @@ public class Server {
 					br = new BufferedReader(
 							new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
 
-					pw.println("##########################");
-					pw.println("Welcome to Routeplaner 1.0");
-					pw.println("##########################");
+					printStartText(pw);
 					runStartup();
 				}
 			}
@@ -89,6 +87,12 @@ public class Server {
 			}
 		}
 
+	}
+	
+	private void printStartText(PrintWriter pw) {
+		pw.println("##########################");
+		pw.println("Welcome to Routeplaner 1.0");
+		pw.println("##########################");
 	}
 
 	private void printCommandOptionText(PrintWriter pw) {

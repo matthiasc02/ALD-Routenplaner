@@ -11,7 +11,7 @@ public class RouteConverter {
 		if (routeList == null || routeList.isEmpty())
 			return null;
 		
-		Graph graph = new ListGraph(10, false);
+		Graph graph = new ListGraph(routeList.size(), false);
 		for(Route route : routeList) {
 			graph.addEdge(route.getFromTownId(), route.getToTownId(), route.getDistance());
 		}
