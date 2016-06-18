@@ -16,7 +16,9 @@ import command.OptionCommandValidator;
 import command.SearchStrategyCommandValidator;
 import data.Route;
 import data.RouteConverter;
+import data.RouteMappingCsvReader;
 import data.Town;
+import data.TownMappingCsvReader;
 import data.TownResolver;
 import output.RouteFormatter;
 import search.SearchStrategy;
@@ -33,6 +35,8 @@ public class Server {
 	private RouteConverter routeConverter = new RouteConverter();
 	private TownResolver townResolver = new TownResolver();
 	private RouteFormatter routeFormatter = new RouteFormatter();
+	private TownMappingCsvReader townReader = new TownMappingCsvReader();
+	private RouteMappingCsvReader routeReader = new RouteMappingCsvReader();
 	private PrintWriter pw;
 	private BufferedReader br;
 	private Socket socket;
@@ -40,11 +44,6 @@ public class Server {
 
 	private List<Town> townList;
 	private List<Route> routeList;
-
-	public Server(List<Town> townList, List<Route> routeList) {
-		this.townList = townList;
-		this.routeList = routeList;
-	}
 
 	public static int getPort() {
 		return PORT;
@@ -54,7 +53,7 @@ public class Server {
 
 		try {
 			serverSocket = new ServerSocket(PORT);
-			
+
 			// as we are lazy we can start the cmd shell by the program itself
 			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "9995");
 			try {
@@ -62,6 +61,9 @@ public class Server {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+			townList = (List<Town>) townReader.parseFile();
+			routeList = (List<Route>) routeReader.parseFile();
 
 			while (true) {
 				if (!serverSocket.isClosed()) {
@@ -158,7 +160,7 @@ public class Server {
 				}
 
 				doRouteSearch(startTown, destinationTown, searchStrategyCommand);
-				
+
 				startNewRouteSearch();
 			}
 		} catch (IOException e) {
@@ -189,7 +191,7 @@ public class Server {
 		}
 		return town;
 	}
-	
+
 	private void doRouteSearch(Town startTown, Town destinationTown, String searchStrategyCommand) {
 		if (startTown != null && destinationTown != null) {
 			Graph graph = routeConverter.convertRoutesToGraph(routeList);
@@ -204,7 +206,7 @@ public class Server {
 			pw.println("Start or destination town not set.");
 		}
 	}
-	
+
 	private void printStartText(PrintWriter pw) {
 		pw.println("##########################");
 		pw.println("Welcome to Routeplaner 1.0");
