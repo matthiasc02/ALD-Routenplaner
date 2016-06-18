@@ -12,8 +12,7 @@ public class TownResolver {
 			return null;
 		}
 		
-		Town searchTown = new Town(-1, townName);
-		Node<Town> node = townSearchTree.find(searchTown);
+		Node<Town> node = townSearchTree.find(townName);
 		return node != null ? node.getValue() : null;
 	}
 	
