@@ -24,12 +24,13 @@ public class Main {
 		
 		g.addEdge(0, 1, 200);
 		g.addEdge(0, 2, 130);
+		g.addEdge(0, 4, 1000);
+		g.addEdge(1, 5, 150);
+		g.addEdge(5, 6, 100);	
 		g.addEdge(2, 3, 230);
-		g.addEdge(1, 6, 150);
 		g.addEdge(6, 3, 140);
 		g.addEdge(3, 4, 200);
 		g.addEdge(2, 4, 200);
-		g.addEdge(0, 4, 1000);
 		
 		findByTiefenSucheRekursiv(g, 0, 4);
 		
