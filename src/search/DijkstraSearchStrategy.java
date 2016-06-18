@@ -1,6 +1,5 @@
 package search;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import Graph.Graph;
@@ -28,7 +27,7 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 		}
 
 		dist[startId] = 0;
-		heap.setPriority(0, 0);
+		heap.setPriority(startId, 0);
 
 		while (!heap.isEmpty()) {
 
