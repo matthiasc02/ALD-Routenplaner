@@ -40,7 +40,7 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 			List<WeightedEdge> neighbours = graph.getEdges(cur.vertex);
 
 			for (WeightedEdge neighbour : neighbours) {
-				int distanceTilHere = cur.weight;
+				int distanceTilHere = dist[cur.vertex];
 				int distanceToNeighbour = neighbour.weight;
 
 				int distanceTotal = distanceTilHere + distanceToNeighbour;
