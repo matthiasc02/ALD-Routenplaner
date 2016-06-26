@@ -11,70 +11,63 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import Graph.Graph;
-import command.OptionCommandValidator;
-import command.SearchStrategyCommandValidator;
 import data.Route;
-import data.RouteConverter;
 import data.RouteMappingCsvReader;
 import data.Town;
 import data.TownMappingCsvReader;
-import data.TownResolver;
-import output.RouteFormatter;
-import search.SearchStrategy;
-import search.SearchStrategyResolver;
+import search.RouteResolver;
 
 public class Server {
 
 	private static final int PORT = 9995;
 
+	private PrintWriter printWriter;
+	private BufferedReader bufferedReader;
+	private Socket socket;
+	private OutputStream outputStream;
+
 	private ServerSocket serverSocket = null;
-	private OptionCommandValidator optionCommandValidator = new OptionCommandValidator();
-	private SearchStrategyCommandValidator searchStrategyCommandValidator = new SearchStrategyCommandValidator();
-	private SearchStrategyResolver searchStrategyResolver = new SearchStrategyResolver();
-	private RouteConverter routeConverter = new RouteConverter();
-	private TownResolver townResolver = new TownResolver();
-	private RouteFormatter routeFormatter = new RouteFormatter();
 	private TownMappingCsvReader townReader = new TownMappingCsvReader();
 	private RouteMappingCsvReader routeReader = new RouteMappingCsvReader();
-	private PrintWriter pw;
-	private BufferedReader br;
-	private Socket socket;
-	private OutputStream os;
+	private RouteResolver routeResolver = new RouteResolver();
 
 	private List<Town> townList;
 	private List<Route> routeList;
 
-	public static int getPort() {
-		return PORT;
-	}
+	private CommandInputHandler commandInputHandler;
+	private CommandPrintHandler commandPrintHandler;
 
 	public void run() {
-
 		try {
 			serverSocket = new ServerSocket(PORT);
 
 			// as we are lazy we can start the cmd shell by the program itself
-			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "9995");
+			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "" + PORT);
 			try {
 				builder.start();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 			townList = (List<Town>) townReader.parseFile();
 			routeList = (List<Route>) routeReader.parseFile();
 
 			while (true) {
 				if (!serverSocket.isClosed()) {
 					socket = serverSocket.accept();
-					os = socket.getOutputStream();
-					pw = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.ISO_8859_1), true);
-					br = new BufferedReader(
+					outputStream = socket.getOutputStream();
+					printWriter = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.ISO_8859_1),
+							true);
+					bufferedReader = new BufferedReader(
 							new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
 
-					printStartText(pw);
-					runStartup();
+					commandPrintHandler = new CommandPrintHandler(printWriter);
+					commandInputHandler = new CommandInputHandler(this, printWriter, bufferedReader);
+
+					commandPrintHandler.printStartText();
+
+					startRoutePlannerRoutine();
+
 				}
 			}
 		} catch (IOException e) {
@@ -101,161 +94,35 @@ public class Server {
 		}
 	}
 
-	private void shutDownServerOnInput(PrintWriter pw, Socket socket) throws IOException {
-		pw.println("Routeplaner is going to shutdown...");
-		pw.close();
+	public void shutDownServerOnInput() throws IOException {
+		printWriter.println("Routeplaner is going to shutdown...");
+		printWriter.close();
 		socket.close();
 		shutDown();
+		System.exit(0);
 	}
 
-	private void runStartup() {
-		try {
-			printCommandOptionText(pw);
+	private void startRoutePlannerRoutine() throws IOException {
+		commandPrintHandler.printCommandOptionText();
+		commandInputHandler.handleCommandOptionInput();
 
-			String optionCommand = br.readLine();
-			while (!optionCommandValidator.isValidOptionCommand(optionCommand)) {
-				pw.println("Command '" + optionCommand + "' not found.");
-				printCommandOptionText(pw);
-				optionCommand = br.readLine();
-			}
+		commandPrintHandler.printSearchStrategyCommandText();
+		String searchStrategyCommand = commandInputHandler.handleSearchStrategyCommandInput();
 
-			// prüfe auf Eingabe von C (Close)
+		commandPrintHandler.printTownList(townList);
+		Town startTown = commandInputHandler.handleTownInput("Please enter the name of your start town: ", townList);
+		Town destinationTown = commandInputHandler.handleTownInput("Please enter the name of your destination town: ",
+				townList);
 
-			if (optionCommandValidator.isShutDownOptionCommand(optionCommand)) {
-				shutDownServerOnInput(pw, socket);
-				return;
-			} else {
-				printSearchStrategyCommandText(pw);
+		List<Integer> townIds = routeResolver.doRouteSearch(startTown, destinationTown, routeList,
+				searchStrategyCommand);
+		commandPrintHandler.printSearchResult(townIds, townList);
 
-				String searchStrategyCommand = br.readLine();
-
-				while (!searchStrategyCommandValidator.isValidSearchStrategyCommand(searchStrategyCommand)) {
-					// prüfe auf Eingabe von C (Close)
-					if (optionCommandValidator.isShutDownOptionCommand(searchStrategyCommand)) {
-						shutDownServerOnInput(pw, socket);
-						return; // return zum rausgehen aus der Methode
-					} else {
-						pw.println("Command '" + searchStrategyCommand + "' not found.");
-						printSearchStrategyCommandText(pw);
-						searchStrategyCommand = br.readLine();
-					}
-				}
-
-				printTownList();
-
-				Town startTown = null;
-				String startTownInputText = "Please enter the name of your start town: ";
-				startTown = handleTownInput(startTownInputText, br);
-				if (startTown == null) {
-					shutDownServerOnInput(pw, socket);
-					return;
-				}
-
-				Town destinationTown = null;
-				String destinationTownInputText = "Please enter the name of your destination town: ";
-				destinationTown = handleTownInput(destinationTownInputText, br);
-				if (destinationTown == null) {
-					shutDownServerOnInput(pw, socket);
-					return;
-				}
-
-				doRouteSearch(startTown, destinationTown, searchStrategyCommand);
-
-				startNewRouteSearch();
-			}
-		} catch (IOException e) {
-			System.out.println("Could not startup Server.");
-			e.printStackTrace();
-		} finally {
-			try {
-				shutDown();
-			} catch (IOException e) {
-				System.out.println("Could not shutdown Server. Maybe server is already down.");
-				e.printStackTrace();
-			}
-		}
+		startNewRouteSearch();
 	}
 
-	private Town handleTownInput(String inputText, BufferedReader br) throws IOException {
-		Town town = null;
-		pw.printf(inputText);
-		while (town == null) {
-			String startTownInput = br.readLine();
-			town = townResolver.getTownByName(townList, startTownInput);
-			if (optionCommandValidator.isShutDownOptionCommand(startTownInput)) {
-				return null;
-			}
-			if (town == null) {
-				pw.printf("Your town couldn't be recognized. Please enter other town: ");
-			}
-		}
-		return town;
-	}
-
-	private void doRouteSearch(Town startTown, Town destinationTown, String searchStrategyCommand) {
-		if (startTown != null && destinationTown != null) {
-			Graph graph = routeConverter.convertRoutesToGraph(routeList);
-			SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
-			List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-			if (townIds != null) {
-				printWay(townIds);
-			} else {
-				pw.println("No route found.");
-			}
-		} else {
-			pw.println("Start or destination town not set.");
-		}
-	}
-
-	private void printStartText(PrintWriter pw) {
-		pw.println("##########################");
-		pw.println("Welcome to Routeplaner 1.0");
-		pw.println("##########################");
-	}
-
-	private void printCommandOptionText(PrintWriter pw) {
-		pw.println();
-		pw.println(String.format("[%s] search for route", OptionCommandValidator.OPTION_COMMAND_SEARCH));
-		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
-		pw.printf("Please enter one of the above commands: ");
-	}
-
-	private void printSearchStrategyCommandText(PrintWriter pw) {
-		pw.println();
-		pw.println(String.format("[%s] dijkstra", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DIJKSTRA));
-		pw.println(String.format("[%s] breadthfirst",
-				SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_BREADTHFIRST));
-		pw.println(String.format("[%s] depthfirst", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DEPTHFIRST));
-		pw.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
-		pw.printf("Please enter one of the above search strategies: ");
-	}
-
-	private void printTownList() {
-		pw.println();
-		pw.println("You can select from the following cities:");
-		for (Town town : townList) {
-			pw.printf(town.getName());
-			if (townList.indexOf(town) != (townList.size() - 1))
-				pw.printf(", ");
-		}
-		pw.println();
-		pw.println();
-	}
-
-	private void printWay(List<Integer> townIds) {
-		String formattedWayByIds = routeFormatter.getFormattedWayByIds(townIds);
-		String formattedWayByNames = routeFormatter.getFormattedWayByNames(townIds, townList);
-		pw.println();
-		pw.println(formattedWayByIds);
-		pw.println(formattedWayByNames);
-	}
-
-	private void startNewRouteSearch() {
-		pw.println();
-		pw.println();
-		pw.println("##########################");
-		pw.println("New route search");
-		pw.println("##########################");
-		runStartup();
+	private void startNewRouteSearch() throws IOException {
+		commandPrintHandler.printNewRouteSearch();
+		startRoutePlannerRoutine();
 	}
 }

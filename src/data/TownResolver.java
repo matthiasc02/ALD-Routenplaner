@@ -27,6 +27,7 @@ public class TownResolver {
 			}
 		}
 		return townMap;
+
 	}
 
 	private TownSearchTree convertTownListToTree(List<Town> townList) {

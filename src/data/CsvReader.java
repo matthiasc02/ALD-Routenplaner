@@ -15,26 +15,30 @@ public abstract class CsvReader<T> {
 
 	public Collection<T> parseFile() {
 		List<T> objects = new ArrayList<T>();
-		BufferedReader br = null;
+		BufferedReader bufferedReader = null;
 		try {
-			InputStream res = CsvReader.class.getResourceAsStream(getFilePath());
-			br = new BufferedReader(new InputStreamReader(res));
+			InputStream ressource = CsvReader.class.getResourceAsStream(getFilePath());
+			bufferedReader = new BufferedReader(new InputStreamReader(ressource));
 			String line = null;
-			while ((line = br.readLine()) != null) {
+			while ((line = bufferedReader.readLine()) != null) {
 				T obj = parseLine(line);
 				objects.add(obj);
 			}
 		} catch (FileNotFoundException e) {
+			System.out.println("Could not find file!");
 			e.printStackTrace();
 		} catch (FileNotParseableException e) {
+			System.out.println("Could not parse file!");
 			e.printStackTrace();
 		} catch (IOException e) {
+			System.out.println("An error occured while reading file!");
 			e.printStackTrace();
 		} finally {
-			if (br != null) {
+			if (bufferedReader != null) {
 				try {
-					br.close();
+					bufferedReader.close();
 				} catch (IOException e) {
+					System.out.println("An error occured closing reader!");
 					e.printStackTrace();
 				}
 			}
