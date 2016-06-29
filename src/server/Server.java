@@ -43,12 +43,12 @@ public class Server {
 			serverSocket = new ServerSocket(PORT);
 
 			// as we are lazy we can start the cmd shell by the program itself
-			/*ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "" + PORT);
+			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "" + PORT);
 			try {
 				builder.start();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}*/
+			}
 
 			townList = (List<Town>) townReader.parseFile();
 			routeList = (List<Route>) routeReader.parseFile();
