@@ -9,11 +9,12 @@ import Graph.WeightedEdge;
 public class DepthFirstSearchStrategy implements SearchStrategy {
 
 	@Override
-	public List<Integer> search(Graph graph, int startId, int destinationId) {
+	public SearchResultData search(Graph graph, int startId, int destinationId) {
 		return findByDepthSearch(graph, startId, destinationId);
 	}
 
-	protected List<Integer> findByDepthSearch(Graph graph, int startId, int destinationId) {
+	protected SearchResultData findByDepthSearch(Graph graph, int startId, int destinationId) {
+		SearchResultData searchResultData = new SearchResultData();
 		Stack<Integer> nodes = new Stack<Integer>();
 
 		boolean[] visited = new boolean[graph.numVertices()];
@@ -45,11 +46,13 @@ public class DepthFirstSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		return SearchUtils.predToWay(pred, startId, destinationId);
+		List<Integer> townIdList = SearchUtils.predToWay(pred, startId, destinationId);
+		searchResultData.setTownIdList(townIdList);
+		return searchResultData;
 	}
 
-	protected void findByDepthSearchRecursive(Graph graph, int startId, int destinationId) {
-
+	protected SearchResultData findByDepthSearchRecursive(Graph graph, int startId, int destinationId) {
+		SearchResultData searchResultData = new SearchResultData();
 		boolean[] visited = new boolean[graph.numVertices()];
 		int[] pred = new int[graph.numVertices()];
 
@@ -58,9 +61,9 @@ public class DepthFirstSearchStrategy implements SearchStrategy {
 
 		_findByDepthSearchRecursive(graph, startId, destinationId, visited, pred);
 
-		for (int i = 0; i < pred.length; i++) {
-			System.out.println(i + " über " + pred[i]);
-		}
+		List<Integer> townIdList = SearchUtils.predToWay(pred, startId, destinationId);
+		searchResultData.setTownIdList(townIdList);
+		return searchResultData;
 	}
 
 	private boolean _findByDepthSearchRecursive(Graph graph, int current, int destinationId, boolean[] visited,

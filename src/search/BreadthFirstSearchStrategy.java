@@ -9,11 +9,12 @@ import Graph.WeightedEdge;
 public class BreadthFirstSearchStrategy implements SearchStrategy {
 
 	@Override
-	public List<Integer> search(Graph graph, int startId, int destinationId) {
+	public SearchResultData search(Graph graph, int startId, int destinationId) {
 		return findByBreadthFirst(graph, startId, destinationId);
 	}
 
-	protected List<Integer> findByBreadthFirst(Graph graph, int startId, int destinationId) {
+	protected SearchResultData findByBreadthFirst(Graph graph, int startId, int destinationId) {
+		SearchResultData searchResultData = new SearchResultData();
 		ArrayDeque<Integer> nodes = new ArrayDeque<Integer>();
 
 		boolean[] visited = new boolean[graph.numVertices()];
@@ -45,7 +46,9 @@ public class BreadthFirstSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		return SearchUtils.predToWay(pred, startId, destinationId);
+		List<Integer> townIdList = SearchUtils.predToWay(pred, startId, destinationId);
+		searchResultData.setTownIdList(townIdList);
+		return searchResultData;
 	}
 
 }

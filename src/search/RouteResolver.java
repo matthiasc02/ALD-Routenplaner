@@ -12,12 +12,12 @@ public class RouteResolver {
 	private SearchStrategyResolver searchStrategyResolver = new SearchStrategyResolver();
 	private RouteConverter routeConverter = new RouteConverter();
 
-	public List<Integer> doRouteSearch(Town startTown, Town destinationTown, List<Route> routeList,
+	public SearchResultData doRouteSearch(Town startTown, Town destinationTown, List<Route> routeList,
 			String searchStrategyCommand) {
 		Graph graph = routeConverter.convertRoutesToGraph(routeList);
 		SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
-		List<Integer> townIds = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
-		return townIds;
+		SearchResultData searchResultData = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
+		return searchResultData;
 	}
 
 }

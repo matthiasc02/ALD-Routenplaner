@@ -16,6 +16,7 @@ import data.RouteMappingCsvReader;
 import data.Town;
 import data.TownMappingCsvReader;
 import search.RouteResolver;
+import search.SearchResultData;
 
 public class Server {
 
@@ -42,12 +43,12 @@ public class Server {
 			serverSocket = new ServerSocket(PORT);
 
 			// as we are lazy we can start the cmd shell by the program itself
-			ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "" + PORT);
+			/*ProcessBuilder builder = new ProcessBuilder("CMD", "/C", "start", "telnet", "localhost", "" + PORT);
 			try {
 				builder.start();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}*/
 
 			townList = (List<Town>) townReader.parseFile();
 			routeList = (List<Route>) routeReader.parseFile();
@@ -114,9 +115,9 @@ public class Server {
 		Town destinationTown = commandInputHandler.handleTownInput("Please enter the name of your destination town: ",
 				townList);
 
-		List<Integer> townIds = routeResolver.doRouteSearch(startTown, destinationTown, routeList,
+		SearchResultData searchResultData = routeResolver.doRouteSearch(startTown, destinationTown, routeList,
 				searchStrategyCommand);
-		commandPrintHandler.printSearchResult(townIds, townList);
+		commandPrintHandler.printSearchResult(searchResultData.getTownIdList(), townList);
 
 		startNewRouteSearch();
 	}

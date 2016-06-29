@@ -9,12 +9,13 @@ import Graph.WeightedEdge;
 public class DijkstraSearchStrategy implements SearchStrategy {
 
 	@Override
-	public List<Integer> search(Graph graph, int startId, int destinationId) {
+	public SearchResultData search(Graph graph, int startId, int destinationId) {
 		return dijkstra(graph, startId, destinationId);
 	}
 
 	// Variante mit Heap für lichte Graphen
-	protected List<Integer> dijkstra(Graph graph, int startId, int destinationId) {
+	protected SearchResultData dijkstra(Graph graph, int startId, int destinationId) {
+		SearchResultData searchResultData = new SearchResultData();
 		int[] pred = new int[graph.numVertices()];
 		int[] dist = new int[graph.numVertices()];
 		boolean[] visited = new boolean[graph.numVertices()];
@@ -54,11 +55,14 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 			}
 		}
 
-		return SearchUtils.predToWay(pred, startId, destinationId);
+		List<Integer> townIdList = SearchUtils.predToWay(pred, startId, destinationId);
+		searchResultData.setTownIdList(townIdList);
+		return searchResultData;
 	}
 
 	// Variante ohne Heap für dichte Graphen
-	private void dijkstra2(Graph graph, int startId, int destinationId) {
+	private SearchResultData dijkstra2(Graph graph, int startId, int destinationId) {
+		SearchResultData searchResultData = new SearchResultData();
 		int[] pred = new int[graph.numVertices()];
 		int[] dist = new int[graph.numVertices()];
 		boolean[] visited = new boolean[graph.numVertices()];
@@ -90,6 +94,10 @@ public class DijkstraSearchStrategy implements SearchStrategy {
 				}
 			}
 		}
+		
+		List<Integer> townIdList = SearchUtils.predToWay(pred, startId, destinationId);
+		searchResultData.setTownIdList(townIdList);
+		return searchResultData;
 	}
 
 	private static int nextVertex(int[] dist, boolean[] visited) {
