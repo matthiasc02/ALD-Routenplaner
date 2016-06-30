@@ -15,7 +15,7 @@ public class RouteFormatter {
 			return "No route found!";
 		}
 
-		StringBuilder sb = new StringBuilder("Route by town ids: ");
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < townIds.size(); i++) {
 			sb.append(townIds.get(i));
 			if (i < townIds.size() - 1) {
@@ -33,7 +33,7 @@ public class RouteFormatter {
 
 		Map<Integer, Town> townMap = townResolver.convertListToMap(towns);
 
-		StringBuilder sb = new StringBuilder("Route by town names: ");
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < townIds.size(); i++) {
 			Town town = townMap.get(townIds.get(i));
 			sb.append(town.getName());

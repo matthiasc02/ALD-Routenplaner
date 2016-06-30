@@ -77,8 +77,8 @@ public class CommandPrintHandler {
 		String formattedWayByIds = routeFormatter.getFormattedWayByIds(townIds);
 		String formattedWayByNames = routeFormatter.getFormattedWayByNames(townIds, townList);
 		printWriter.println();
-		printWriter.println(formattedWayByIds);
-		printWriter.println(formattedWayByNames);
+		printWriter.println("Route by town ids: " + formattedWayByIds);
+		printWriter.println("Route by town names: " + formattedWayByNames);
 	}
 
 	public void printNewRouteSearch() {

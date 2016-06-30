@@ -7,11 +7,16 @@ public class SearchUtils {
 		ArrayList<Integer> way = new ArrayList<Integer>();
 
 		int i = to;
-		while (i != from) {
+		while (i != from && i != -1) {
 			way.add(0, i);
 			i = pred[i];
 		}
-		way.add(0, from);
+		if (i != -1) {
+			way.add(0, from);
+		} else {
+			// no route to target found
+			way.clear();
+		}
 
 		return way;
 	}
