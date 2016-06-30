@@ -13,8 +13,8 @@ public class RouteResolver {
 	private RouteConverter routeConverter = new RouteConverter();
 
 	public SearchResultData doRouteSearch(Town startTown, Town destinationTown, List<Route> routeList,
-			String searchStrategyCommand) {
-		Graph graph = routeConverter.convertRoutesToGraph(routeList);
+			String searchStrategyCommand, int numberOfTowns) {
+		Graph graph = routeConverter.convertRoutesToGraph(routeList, numberOfTowns);
 		SearchStrategy searchStrategy = searchStrategyResolver.getSelectedSearchStrategy(searchStrategyCommand);
 		SearchResultData searchResultData = searchStrategy.search(graph, startTown.getId(), destinationTown.getId());
 		return searchResultData;

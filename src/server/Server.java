@@ -116,8 +116,8 @@ public class Server {
 				townList);
 
 		SearchResultData searchResultData = routeResolver.doRouteSearch(startTown, destinationTown, routeList,
-				searchStrategyCommand);
-		commandPrintHandler.printSearchResult(searchResultData.getTownIdList(), townList);
+				searchStrategyCommand, townList.size());
+		commandPrintHandler.printSearchResult(searchResultData, townList);
 
 		startNewRouteSearch();
 	}

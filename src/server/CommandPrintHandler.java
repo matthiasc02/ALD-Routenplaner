@@ -7,6 +7,7 @@ import command.OptionCommandValidator;
 import command.SearchStrategyCommandValidator;
 import data.Town;
 import output.RouteFormatter;
+import search.SearchResultData;
 
 public class CommandPrintHandler {
 
@@ -63,7 +64,8 @@ public class CommandPrintHandler {
 		printWriter.println();
 	}
 
-	public void printSearchResult(List<Integer> townIds, List<Town> townList) {
+	public void printSearchResult(SearchResultData searchResultData, List<Town> townList) {
+		List<Integer> townIds = searchResultData.getTownIdList();
 		if (townIds != null) {
 			printWay(townIds, townList);
 		} else {
