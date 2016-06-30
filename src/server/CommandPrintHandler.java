@@ -3,6 +3,7 @@ package server;
 import java.io.PrintWriter;
 import java.util.List;
 
+import command.GraphCommandValidator;
 import command.OptionCommandValidator;
 import command.SearchStrategyCommandValidator;
 import data.Town;
@@ -27,6 +28,7 @@ public class CommandPrintHandler {
 
 	public void printCommandOptionText() {
 		printWriter.println();
+		printWriter.println("Command options");
 		printWriter.println(String.format("[%s] search for route", OptionCommandValidator.OPTION_COMMAND_SEARCH));
 		printWriter.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
 		printWriter.printf("Please enter one of the above commands: ");
@@ -34,6 +36,7 @@ public class CommandPrintHandler {
 
 	public void printSearchStrategyCommandText() {
 		printWriter.println();
+		printWriter.println("Search strategy options");
 		printWriter.println(
 				String.format("[%s] dijkstra", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DIJKSTRA));
 		printWriter.println(String.format("[%s] breadthfirst",
@@ -42,6 +45,17 @@ public class CommandPrintHandler {
 				String.format("[%s] depthfirst", SearchStrategyCommandValidator.SEARCH_STRATEGY_COMMAND_DEPTHFIRST));
 		printWriter.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
 		printWriter.printf("Please enter one of the above search strategies: ");
+	}
+	
+	public void printGraphCommandText() {
+		printWriter.println();
+		printWriter.println("Graph options");
+		printWriter.println(
+				String.format("[%s] directed", GraphCommandValidator.DIRECTED));
+		printWriter.println(String.format("[%s] not directed",
+				GraphCommandValidator.NOT_DIRECTED));
+		printWriter.println(String.format("[%s] shutdown routeplaner", OptionCommandValidator.OPTION_COMMAND_SHUTDOWN));
+		printWriter.printf("Please enter one of the above graph commands: ");
 	}
 
 	public void printCommandNotFoundText(String command) {

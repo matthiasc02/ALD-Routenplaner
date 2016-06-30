@@ -109,6 +109,9 @@ public class Server {
 
 		commandPrintHandler.printSearchStrategyCommandText();
 		String searchStrategyCommand = commandInputHandler.handleSearchStrategyCommandInput();
+		
+		commandPrintHandler.printGraphCommandText();
+		String graphCommand = commandInputHandler.handleGraphCommandInput();
 
 		commandPrintHandler.printTownList(townList);
 		Town startTown = commandInputHandler.handleTownInput("Please enter the name of your start town: ", townList);
@@ -116,7 +119,7 @@ public class Server {
 				townList);
 
 		SearchResultData searchResultData = routeResolver.doRouteSearch(startTown, destinationTown, routeList,
-				searchStrategyCommand, townList.size());
+				searchStrategyCommand, graphCommand, townList.size());
 		commandPrintHandler.printSearchResult(searchResultData, townList);
 
 		startNewRouteSearch();

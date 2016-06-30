@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
+import command.GraphCommandValidator;
 import command.OptionCommandValidator;
 import command.SearchStrategyCommandValidator;
 import data.Town;
@@ -21,6 +22,7 @@ public class CommandInputHandler {
 	private TownResolver townResolver = new TownResolver();
 	// private Server server = new Server();
 	private CommandPrintHandler commandPrintHandler;
+	private GraphCommandValidator graphCommandValdiator = new GraphCommandValidator();
 
 	public CommandInputHandler(Server server, PrintWriter printWriter, BufferedReader bufferedReader) {
 		this.server = server;
@@ -58,6 +60,21 @@ public class CommandInputHandler {
 		}
 
 		return searchStrategyCommand;
+	}
+	
+	public String handleGraphCommandInput() throws IOException {
+		String graphCommand = bufferedReader.readLine();
+		while (!graphCommandValdiator.isValidGraphCommand(graphCommand)) {
+			commandPrintHandler.printCommandNotFoundText(graphCommand);
+			commandPrintHandler.printGraphCommandText();
+			graphCommand = bufferedReader.readLine();
+		}
+
+		if (optionCommandValidator.isShutDownOptionCommand(graphCommand)) {
+			server.shutDownServerOnInput();
+		}
+
+		return graphCommand;
 	}
 
 	public Town handleTownInput(String inputText, List<Town> townList) throws IOException {
